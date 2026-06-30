@@ -1,4 +1,5 @@
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const Customer = require("../models/customer");
 
 // Customer Register
@@ -62,7 +63,92 @@ const register = async (req, res) => {
     }
 };
 
+//customer login
+const login = async (req, res) => {
+    try {
+        const { name, password } = req.body;
+
+        // Validation
+        if (!name || !password) {
+            return res.status(400).json({
+                error: true,
+                success: false,
+                message: "Name and Password are required.",
+            });
+        }
+
+        // Check customer exists
+        const customer = await Customer.findOne({
+            name: name.trim(),
+        });
+
+        if (!customer) {
+            return res.status(404).json({
+                error: true,
+                success: false,
+                message: "Customer not found.",
+            });
+        }
+
+        // Check customer status
+        if (!customer.isActive) {
+            return res.status(403).json({
+                error: true,
+                success: false,
+                message: "Your account has been deactivated.",
+            });
+        }
+
+        // Compare Password
+        const isPasswordMatch = await bcrypt.compare(
+            password,
+            customer.password
+        );
+
+        if (!isPasswordMatch) {
+            return res.status(401).json({
+                error: true,
+                success: false,
+                message: "Invalid password.",
+            });
+        }
+
+        // Generate JWT Token
+        const token = jwt.sign(
+            {
+                id: customer._id,
+                customerId: customer.customerId,
+                role: customer.role,
+            },
+            process.env.JWT_SECRET,
+            {
+                expiresIn: "7d",
+            }
+        );
+
+        return res.status(200).json({
+            error: false,
+            success: true,
+            message: "Login successful.",
+            token,
+            data: {
+                id: customer._id,
+                customerId: customer.customerId,
+                name: customer.name,
+                role: customer.role,
+            },
+        });
+    } catch (error) {
+        return res.status(500).json({
+            error: true,
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
 
 module.exports = {
-    register
+    register,
+    login
 }
