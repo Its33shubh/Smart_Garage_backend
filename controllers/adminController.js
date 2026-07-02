@@ -1,6 +1,8 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Admin = require("../models/Admin");
+const Receptionist = require("../models/Receptionist");
+
 
 // Register Admin
 const register = async (req, res) => {
@@ -144,7 +146,66 @@ const login = async (req, res) => {
   }
 };
 
+//create Receptionist
+const createReceptionist = async (req, res) => {
+  try {
+    const { receptionistId, name, password } = req.body;
+
+    // Validation
+    if (!receptionistId || !name || !password) {
+      return res.status(400).json({
+        error: true,
+        success: false,
+        message: "Receptionist ID, Name and Password are required.",
+      });
+    }
+
+    // Check Receptionist ID
+    const existingReceptionist = await Receptionist.findOne({
+      receptionistId: receptionistId.trim(),
+    });
+
+    if (existingReceptionist) {
+      return res.status(409).json({
+        error: true,
+        success: false,
+        message: "Receptionist ID already exists.",
+      });
+    }
+
+    // Hash Password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create Receptionist
+    const receptionist = await Receptionist.create({
+      receptionistId: receptionistId.trim(),
+      name: name.trim(),
+      password: hashedPassword,
+    });
+
+    return res.status(201).json({
+      error: false,
+      success: true,
+      message: "Receptionist created successfully.",
+      data: {
+        receptionistId: receptionist.receptionistId,
+        name: receptionist.name,
+        role: receptionist.role,
+        isActive: receptionist.isActive,
+      },
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      error: true,
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
+  createReceptionist
 };
