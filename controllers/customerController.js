@@ -148,8 +148,42 @@ const login = async (req, res) => {
     }
 };
 
+// Get Customer Profile
+// customer/profile  and jWT token 
+const getProfile = async (req, res) => {
+    try {
+
+        const customer = await Customer.findById(req.user.id).select("-password");
+
+        if (!customer) {
+            return res.status(404).json({
+                error: true,
+                success: false,
+                message: "Customer not found.",
+            });
+        }
+
+        return res.status(200).json({
+            error: false,
+            success: true,
+            data: customer,
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            error: true,
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
+
+
+
 
 module.exports = {
     register,
-    login
+    login,
+    getProfile
 }
