@@ -6,6 +6,8 @@ const connectDB = require("./config/db");
 const customerRoutes = require("./routes/customerRoutes")
 const receptionist = require("./routes/receptionistRoutes")
 const adminRoutes = require("./routes/adminRoutes")
+const serviceAdvisorRoutes = require("./routes/serviceAdvisorRoutes");
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -31,6 +33,8 @@ app.get("/test", (req, res) => {
 app.use("/customer", customerRoutes);
 app.use("/admin", adminRoutes);
 app.use("/receptionist",receptionist)
+app.use("/service_advisor", serviceAdvisorRoutes);
+
 
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);

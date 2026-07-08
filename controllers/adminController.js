@@ -2,6 +2,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Admin = require("../models/Admin");
 const Receptionist = require("../models/Receptionist");
+const ServiceAdvisor = require("../models/ServiceAdvisor");
+
 
 
 // Register Admin
@@ -204,8 +206,67 @@ const createReceptionist = async (req, res) => {
   }
 };
 
+// Create Service Advisor (Only Admin)
+const createServiceAdvisor = async (req, res) => {
+  try {
+    const { advisorId, name, password } = req.body;
+
+    // Validation
+    if (!advisorId || !name || !password) {
+      return res.status(400).json({
+        error: true,
+        success: false,
+        message: "Advisor ID, Name and Password are required.",
+      });
+    }
+
+    // Check Advisor ID
+    const existingAdvisor = await ServiceAdvisor.findOne({
+      advisorId: advisorId.trim(),
+    });
+
+    if (existingAdvisor) {
+      return res.status(409).json({
+        error: true,
+        success: false,
+        message: "Service Advisor ID already exists.",
+      });
+    }
+
+    // Hash Password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create Service Advisor
+    const advisor = await ServiceAdvisor.create({
+      advisorId: advisorId.trim(),
+      name: name.trim(),
+      password: hashedPassword,
+    });
+
+    return res.status(201).json({
+      error: false,
+      success: true,
+      message: "Service Advisor created successfully.",
+      data: {
+        advisorId: advisor.advisorId,
+        name: advisor.name,
+        role: advisor.role,
+        isActive: advisor.isActive,
+      },
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      error: true,
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
-  createReceptionist
+  createReceptionist,
+  createServiceAdvisor
 };
