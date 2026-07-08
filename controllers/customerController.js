@@ -35,7 +35,7 @@ const register = async (req, res) => {
         // Generate Customer ID
         const totalCustomers = await Customer.countDocuments();
 
-        const customerId = `CUS${String(totalCustomers + 1).padStart(4, "0")}`;
+        const customerId = `CU${String(totalCustomers + 1).padStart(4, "0")}`;
 
         // Create Customer
         const customer = await Customer.create({
@@ -66,20 +66,20 @@ const register = async (req, res) => {
 //customer login
 const login = async (req, res) => {
     try {
-        const { name, password } = req.body;
+        const { customerId, password } = req.body;
 
         // Validation
-        if (!name || !password) {
+        if (!customerId || !password) {
             return res.status(400).json({
                 error: true,
                 success: false,
-                message: "Name and Password are required.",
+                message: "Customer ID and Password are required.",
             });
         }
 
-        // Check customer exists
+        // Find Customer by Customer ID
         const customer = await Customer.findOne({
-            name: name.trim(),
+            customerId: customerId.trim(),
         });
 
         if (!customer) {
@@ -90,7 +90,7 @@ const login = async (req, res) => {
             });
         }
 
-        // Check customer status
+        // Check Status
         if (!customer.isActive) {
             return res.status(403).json({
                 error: true,
@@ -109,11 +109,11 @@ const login = async (req, res) => {
             return res.status(401).json({
                 error: true,
                 success: false,
-                message: "Invalid password.",
+                message: "Invalid Password.",
             });
         }
 
-        // Generate JWT Token
+        // Generate JWT
         const token = jwt.sign(
             {
                 id: customer._id,
@@ -129,7 +129,7 @@ const login = async (req, res) => {
         return res.status(200).json({
             error: false,
             success: true,
-            message: "Login successful.",
+            message: "Customer Login Successfully.",
             token,
             data: {
                 id: customer._id,
@@ -138,6 +138,7 @@ const login = async (req, res) => {
                 role: customer.role,
             },
         });
+
     } catch (error) {
         return res.status(500).json({
             error: true,
